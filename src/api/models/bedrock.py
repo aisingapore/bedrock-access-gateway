@@ -95,11 +95,11 @@ def list_bedrock_models() -> dict:
             profile_list = [p['inferenceProfileId'] for p in response['inferenceProfileSummaries']]
 
         # List foundation models, only cares about text outputs here.
-        response = bedrock_client.list_foundation_models(
+        foundation_models_response = bedrock_client.list_foundation_models(
             byOutputModality='TEXT'
         )
 
-        for model in response['modelSummaries']:
+        for model in foundation_models_response['modelSummaries']:
             model_id = model.get('modelId', 'N/A')
             stream_supported = model.get('responseStreamingSupported', True)
             status = model['modelLifecycle'].get('status', 'ACTIVE')
@@ -122,6 +122,15 @@ def list_bedrock_models() -> dict:
                 model_list[profile_id] = {
                     'modalities': input_modalities
                 }
+
+        # List imported models
+        imported_models_response = bedrock_client.list_imported_models()
+
+        for model in imported_models_response['modelSummaries']:
+            model_id = model.get('modelArn')
+            model_list[model_id] = {
+                'modalities': ["TEXT"]
+            }
 
     except Exception as e:
         logger.error(f"Unable to list models: {str(e)}")
