@@ -123,11 +123,11 @@ def list_bedrock_models() -> dict:
                     'modalities': input_modalities
                 }
 
-        # List imported models
+        # List the imported models
         imported_models_response = bedrock_client.list_imported_models()
 
         for model in imported_models_response['modelSummaries']:
-            model_id = model.get('modelArn')
+            model_id = model.get('modelArn', 'N/A')
             model_list[model_id] = {
                 'modalities': ["TEXT"]
             }
