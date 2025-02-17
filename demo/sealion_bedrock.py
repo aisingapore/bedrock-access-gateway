@@ -147,10 +147,10 @@ def main():
 
         print(f"{chatbot_name}: ", end="")
         if args.api:
-            # Use the OpenAI compatible endpoint
+            # Stream the response from the OpenAI-compatible API
             stream_openai_response(openai_client, conversation)
         else:
-            # Use the Bedrock endpoint
+            # Stream the response from the Bedrock runtime
             stream_bedrock_response(bedrock_client, conversation)
 
 
