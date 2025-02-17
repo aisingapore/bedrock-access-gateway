@@ -27,7 +27,8 @@
   ```
   pip install -r requirements.txt
   ```
-- Set up the Boto3 credentials: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html
+- Set up the Boto3 credentials.
+  - https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html
 
 ## Demo
 - Run the demo.
@@ -39,4 +40,4 @@
 - When using Amazon Bedrock or any AWS services, please be mindful that costs can accrue based on your usage. AWS pricing varies depending on the services used, the amount of data processed, and the resources allocated. It is recommended that you monitor your AWS usage regularly and review the pricing details on the [AWS Bedrock Pricing page](https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-pricing.html) to avoid unexpected charges.
 - For imported models, you are charged for model inference, based on the number of copies of your custom model required to service your inference volume and the duration each model copy is active, billed in 5-minute windows.
   - A model copy is a single instance of an imported model ready to serve inference requests.
-  - The price per model copy per minute depends on factors such as architecture, context length, AWS Region, compute unit version (hardware generation), and is tiered by model copy size..
+  - The price per model copy per minute depends on factors such as architecture, context length, AWS Region, compute unit version (hardware generation), and is tiered by model copy size.
