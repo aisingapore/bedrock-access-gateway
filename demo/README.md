@@ -4,7 +4,7 @@
 > [!NOTE]
 > At the time of writing, Amazon Bedrock Custom Model Import is available in the `us-east-1` and `us-west-2` AWS regions.
 
-- Upload the [SEA-LION model](https://huggingface.co/aisingapore/llama3.1-8b-cpt-sea-lionv3-instruct) to an Amazon S3 bucket.
+- Upload the [SEA-LION model](https://huggingface.co/aisingapore/Llama-SEA-LION-v3-8B-IT) to an Amazon S3 bucket.
 - Navigate to **Imported models** in the Amazon Bedrock console. Click the **Import model** button.
 - Fill in the **Import model** form. Include the S3 URL of the uploaded SEA-LION model.
 - Click the **Import model** button to start the import.
