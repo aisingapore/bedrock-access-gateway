@@ -9,6 +9,13 @@ export OPENAI_API_KEY=<API key>
 export OPENAI_BASE_URL=<API base url>
 ```
 
+**API 示例:**
+- [Models API](#models-api)
+- [Embedding API](#embedding-api)
+- [Multimodal API](#multimodal-api)
+- [Tool Call](#tool-call)
+- [Reasoning](#reasoning)
+
 ## Models API
 
 你可以通过这个API 获取支持的models 列表。 另外，如果Amazon Bedrock有新模型加入后，你也可以用它来更新刷新模型列表。
@@ -122,10 +129,6 @@ print(doc_result[0][:5])
 
 ## Multimodal API
 
-**重要**:在使用此代理API进行多模态处理之前,请仔细阅读以下几点:
-
-1. 此API 仅支持Claude 3模型。
-
 **Request 示例**
 
 ```bash
@@ -216,7 +219,6 @@ curl $OPENAI_BASE_URL/chat/completions \
 **重要**:在使用此代理API进行Tool Call之前,请仔细阅读以下几点:
 
 1. OpenAI 已经废弃使用Function Call,而推荐使用Tool Call,因此Function Call在此处不受支持,您应该改为Tool Call。
-1. 此API 仅支持Claude 3模型。 
 
 **Request 示例**
 
@@ -314,3 +316,128 @@ curl $OPENAI_BASE_URL/chat/completions \
 You can try it with different questions, such as:
 1. Hello, who are you?  (No tools are needed)
 2. What is the weather like today?  (Should use get_current_location tool first)
+
+## Reasoning
+
+
+**重要**: 使用此 reasoning 推理模式前，请仔细阅读以下要点。
+
+- 目前仅 Claude 3.7 Sonnet / Deepseek R1 模型支持推理功能。使用前请确保所用模型支持推理。
+- Claude 3.7 Sonnet 推理模式（或思考模式）默认未启用，您必须在请求中传递额外的 reasoning_effort 参数，参数值可选:low，medium, high。另外，请在请求中提供正确的 max_tokens（或 max_completion_tokens）参数。budget_tokens 基于 reasoning_effort 设置（低：30%，中：60%，高：100% 的max tokens），确保最小 budget_tokens 为 1,024，Anthropic 建议至少使用 4,000 个令牌以获得全面的推理。详情请参阅 [Bedrock Document](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-anthropic-claude-37.html)。
+- Deepseek R1 会自动使用推理模式，不需要在中传递额外的 reasoning_effort 参数（否则会报错）
+- 推理结果（思维链结果、思考过程）被添加到名为 'reasoning_content' 的额外标签中，这不是 OpenAI 官方支持的格式。此设计遵循 [Deepseek Reasoning Model](https://api-docs.deepseek.com/guides/reasoning_model#api-example)  的规范。未来可能会有所变动。
+
+**Request 示例**
+
+- Claude 3.7 Sonnet
+
+```bash
+curl $OPENAI_BASE_URL/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -d '{
+    "model": "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+    "messages": [
+        {
+            "role": "user",
+            "content": "which one is bigger, 3.9 or 3.11?"
+        }
+    ],
+    "max_completion_tokens": 4096,
+    "reasoning_effort": "low",
+    "stream": false
+}'
+```
+
+- DeepSeek R1
+
+```bash
+curl $OPENAI_BASE_URL/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -d '{
+    "model": "us.deepseek.r1-v1:0",
+    "messages": [
+        {
+            "role": "user",
+            "content": "which one is bigger, 3.9 or 3.11?"
+        }
+    ],
+    "stream": false
+}'
+```
+
+
+**Response 示例**
+
+```json
+{
+    "id": "chatcmpl-83fb7a88",
+    "created": 1740545278,
+    "model": "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+    "system_fingerprint": "fp",
+    "choices": [
+        {
+            "index": 0,
+            "finish_reason": "stop",
+            "logprobs": null,
+            "message": {
+                "role": "assistant",
+                "content": "3.9 is bigger than 3.11.\n\nWhen comparing decimal numbers, we need to understand what these numbers actually represent:...",
+                "reasoning_content": "I need to compare the decimal numbers 3.9 and 3.11.\n\nFor decimal numbers, we first compare the whole number parts, and if they're equal, we compare the decimal parts. \n\nBoth numbers ..."
+            }
+        }
+    ],
+    "object": "chat.completion",
+    "usage": {
+        "prompt_tokens": 51,
+        "completion_tokens": 565,
+        "total_tokens": 616
+    }
+}
+```
+
+或者使用 OpenAI SDK (请先运行`pip3 install -U openai` 升级到最新版本)
+
+- Non-Streaming
+
+```python
+from openai import OpenAI
+client = OpenAI()
+
+messages = [{"role": "user", "content": "which one is bigger, 3.9 or 3.11?"}]
+response = client.chat.completions.create(
+    model="us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+    messages=messages,
+    reasoning_effort="low",
+    max_completion_tokens=4096,
+)
+
+reasoning_content = response.choices[0].message.reasoning_content
+content = response.choices[0].message.content
+```
+
+- Streaming
+
+```python
+from openai import OpenAI
+client = OpenAI()
+
+messages = [{"role": "user", "content": "9.11 and 9.8, which is greater?"}]
+response = client.chat.completions.create(
+    model="us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+    messages=messages,
+    reasoning_effort="low",
+    max_completion_tokens=4096,
+    stream=True,
+)
+
+reasoning_content = ""
+content = ""
+
+for chunk in response:
+    if hasattr(chunk.choices[0].delta, 'reasoning_content') and chunk.choices[0].delta.reasoning_content:
+        reasoning_content += chunk.choices[0].delta.reasoning_content
+    elif chunk.choices[0].delta.content:
+        content += chunk.choices[0].delta.content
+```

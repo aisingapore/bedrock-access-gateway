@@ -4,11 +4,9 @@
 
 OpenAI-compatible RESTful APIs for Amazon Bedrock
 
-## Breaking Changes
+## What's New 🔥
 
-This solution now uses Secrets Manager to maintain API Key for security best practice.  You **MUST** create the API Key first in Secrets Manager and rotate it frequently.
-
-Please raise an GitHub issue if you still have problems.
+This project supports reasoning for both **Claude 3.7 Sonnet** and **DeepSeek R1**, check [How to Use](./docs/Usage.md#reasoning) for more details. You need to first run the Models API to refresh the model list.
 
 ## Overview
 
@@ -24,10 +22,11 @@ If you find this GitHub repository useful, please consider giving it a free star
 - [x] Support streaming response via server-sent events (SSE)
 - [x] Support Model APIs
 - [x] Support Chat Completion APIs
-- [x] Support Tool Call (**new**)
-- [x] Support Embedding API (**new**)
-- [x] Support Multimodal API (**new**)
-- [x] Support Cross-Region Inference (**new**)
+- [x] Support Tool Call
+- [x] Support Embedding API
+- [x] Support Multimodal API
+- [x] Support Cross-Region Inference
+- [x] Support Reasoning (**new**)
 
 Please check [Usage Guide](./docs/Usage.md) for more details about how to use the new APIs.
 
