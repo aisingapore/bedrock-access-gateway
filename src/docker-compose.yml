@@ -1,0 +1,14 @@
+services:
+  bedrock-access-gateway:
+    image: bedrock-access-gateway
+    build:
+      context: .
+      dockerfile: Dockerfile_ecs
+    ports:
+      - "8000:80"
+    environment:
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_SESSION_TOKEN
+      - AWS_DEFAULT_REGION=${AWS_REGION:-us-east-1}
+      - AWS_REGION=${AWS_REGION:-us-east-1}

@@ -92,12 +92,14 @@ def list_bedrock_models() -> dict:
             profile_list = [p["inferenceProfileId"] for p in response["inferenceProfileSummaries"]]
 
         # List foundation models, only cares about text outputs here.
-        response = bedrock_client.list_foundation_models(byOutputModality="TEXT")
+        foundation_models_response = bedrock_client.list_foundation_models(
+            byOutputModality='TEXT'
+        )
 
-        for model in response["modelSummaries"]:
-            model_id = model.get("modelId", "N/A")
-            stream_supported = model.get("responseStreamingSupported", True)
-            status = model["modelLifecycle"].get("status", "ACTIVE")
+        for model in foundation_models_response['modelSummaries']:
+            model_id = model.get('modelId', 'N/A')
+            stream_supported = model.get('responseStreamingSupported', True)
+            status = model['modelLifecycle'].get('status', 'ACTIVE')
 
             # currently, use this to filter out rerank models and legacy models
             if not stream_supported or status not in ["ACTIVE", "LEGACY"]:
@@ -113,6 +115,15 @@ def list_bedrock_models() -> dict:
             profile_id = cr_inference_prefix + "." + model_id
             if profile_id in profile_list:
                 model_list[profile_id] = {"modalities": input_modalities}
+
+        # List the imported models
+        imported_models_response = bedrock_client.list_imported_models()
+
+        for model in imported_models_response['modelSummaries']:
+            model_id = model.get('modelArn', 'N/A')
+            model_list[model_id] = {
+                'modalities': ["TEXT"]
+            }
 
     except Exception as e:
         logger.error(f"Unable to list models: {str(e)}")
