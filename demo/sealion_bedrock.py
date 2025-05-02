@@ -138,6 +138,7 @@ def stream_bedrock_response(bedrock_client, conversation: List[Dict[str, Any]]):
             },
         )
     except ClientError as e:
+        # If the imported model does not support converse_stream, an exception will be raised
         if "ConverseStream operation" in str(e):
             stream_bedrock_response_with_invoke_model(bedrock_client, conversation)
             return
@@ -176,6 +177,7 @@ def main():
         logging.info("Using the Amazon Bedrock Runtime (https://docs.aws.amazon.com/bedrock/latest/APIReference/API_Operations_Amazon_Bedrock_Runtime.html).")
         bedrock_client = boto3.client("bedrock-runtime", region_name=aws_region)
 
+    print("This demo application is built for the imported SEA-LION models (https://sea-lion.ai/our-models/) with Llama architecture.")
     print("Welcome! Type your message or /bye to end.")
 
     # Initialize the conversation history
