@@ -51,29 +51,30 @@ def stream_openai_response(openai_client, conversation: List[Dict[str, Any]]):
             max_tokens=max_tokens,
             temperature=temperature,
         )
-    except (ClientError, Exception) as e:
+
+        # Process the stream
+        assistant_message = ""
+        for part in stream:
+            # Get the content from the stream
+            content = part.choices[0].delta.content or ""
+
+            # Filter out new lines and line feeds
+            filtered_content = content.replace("\n", "").replace("\r", "")
+
+            # Append to the assistant's message
+            assistant_message += filtered_content
+
+            # Print the filtered content
+            print(filtered_content, end="", flush=True)
+
+        print()
+
+        # Append the assistant's reply to the conversation
+        conversation.append({"role": "assistant", "content": assistant_message})
+
+    except Exception as e:
         logging.error(f"Exception: {e}")
         sys.exit(1)
-
-    # Process the stream
-    assistant_message = ""
-    for part in stream:
-        # Get the content from the stream
-        content = part.choices[0].delta.content or ""
-
-        # Filter out new lines and line feeds
-        filtered_content = content.replace("\n", "").replace("\r", "")
-
-        # Append to the assistant's message
-        assistant_message += filtered_content
-
-        # Print the filtered content
-        print(filtered_content, end="", flush=True)
-
-    print()
-
-    # Append the assistant's reply to the conversation
-    conversation.append({"role": "assistant", "content": assistant_message})
 
 
 def stream_bedrock_response_with_invoke_model(bedrock_client, conversation: List[Dict[str, Any]]):
