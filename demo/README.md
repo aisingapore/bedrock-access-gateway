@@ -1,8 +1,12 @@
 # SEA-LION Amazon Bedrock Custom Model Import Demo
 
+## Posts
+- [Importing and Using SEA-LION in a Serverless, On-Demand Environment with Amazon Bedrock](https://sea-lion.ai/importing-and-using-sea-lion-in-a-serverless-on-demand-environment-with-amazon-bedrock/)
+- [OpenAI-compatible APIs with SEA-LION and Bedrock Access Gateway](https://sea-lion.ai/openai-compatible-apis-with-sea-lion-and-bedrock-access-gateway/)
+
 ## Setup
 > [!NOTE]
-> At the time of writing, Amazon Bedrock Custom Model Import is available in the `us-east-1` and `us-west-2` AWS regions.
+> At the time of writing, Amazon Bedrock Custom Model Import is available in the `us-east-1`, `us-west-2` and `eu-central-1` AWS regions. The [supported model architectures](https://docs.aws.amazon.com/bedrock/latest/userguide/model-customization-import-model.html#model-customization-import-model-architecture) include Llama 3 and Llama 3.1.
 
 - Upload the [SEA-LION model](https://huggingface.co/aisingapore/Llama-SEA-LION-v3-8B-IT) to an Amazon S3 bucket.
 - Navigate to **Imported models** in the Amazon Bedrock console. Click the **Import model** button.
