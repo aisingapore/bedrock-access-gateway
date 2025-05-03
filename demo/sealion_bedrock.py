@@ -77,7 +77,9 @@ def stream_openai_response(openai_client, conversation: List[Dict[str, Any]]):
         sys.exit(1)
 
 
-def stream_bedrock_response_with_invoke_model(bedrock_client, conversation: List[Dict[str, Any]]):
+def stream_bedrock_response_with_invoke_model(
+    bedrock_client, conversation: List[Dict[str, Any]]
+):
     """
     Stream the response from Bedrock with invoke_model_with_response_stream.
     Used for the models that do not support converse_stream.
@@ -86,15 +88,16 @@ def stream_bedrock_response_with_invoke_model(bedrock_client, conversation: List
         bedrock_client: The Bedrock client.
         conversation (List[Dict[str, Any]]): The conversation history.
     """
-    request = json.dumps({
-        "prompt": conversation[-1]["content"],
-        "max_gen_len": max_tokens,
-        "temperature": temperature,
-    })
+    request = json.dumps(
+        {
+            "prompt": conversation[-1]["content"],
+            "max_gen_len": max_tokens,
+            "temperature": temperature,
+        }
+    )
     try:
         streaming_response = bedrock_client.invoke_model_with_response_stream(
-            modelId=endpoint_arn,
-            body=request
+            modelId=endpoint_arn, body=request
         )
         for event in streaming_response["body"]:
             chunk = json.loads(event["chunk"]["bytes"])
@@ -102,7 +105,9 @@ def stream_bedrock_response_with_invoke_model(bedrock_client, conversation: List
                 print(chunk["generation"], end="")
         print()
     except bedrock_client.exceptions.ModelNotReadyException:
-        logging.error("The model is not ready for inference. Please wait and try again later.")
+        logging.error(
+            "The model is not ready for inference. Please wait and try again later."
+        )
         sys.exit(1)
     except Exception as e:
         logging.error(f"Exception: {e}")
@@ -145,7 +150,9 @@ def stream_bedrock_response(bedrock_client, conversation: List[Dict[str, Any]]):
             return
         raise
     except bedrock_client.exceptions.ModelNotReadyException:
-        logging.error("The model is not ready for inference. Please wait and try again later.")
+        logging.error(
+            "The model is not ready for inference. Please wait and try again later."
+        )
         sys.exit(1)
     except Exception as e:
         logging.error(f"Exception: {e}")
@@ -175,10 +182,14 @@ def main():
         logging.info("Using the OpenAI-compatible API.")
         openai_client = OpenAI(base_url=openai_base_url, api_key="bedrock")
     else:
-        logging.info("Using the Amazon Bedrock Runtime (https://docs.aws.amazon.com/bedrock/latest/APIReference/API_Operations_Amazon_Bedrock_Runtime.html).")
+        logging.info(
+            "Using the Amazon Bedrock Runtime (https://docs.aws.amazon.com/bedrock/latest/APIReference/API_Operations_Amazon_Bedrock_Runtime.html)."
+        )
         bedrock_client = boto3.client("bedrock-runtime", region_name=aws_region)
 
-    print("This demo application is built for the imported SEA-LION models (https://sea-lion.ai/our-models/) with Llama architecture.")
+    print(
+        "This demo application is built for the imported SEA-LION models (https://sea-lion.ai/our-models/) with Llama architecture."
+    )
     print("Welcome! Type your message or /bye to end.")
 
     # Initialize the conversation history
