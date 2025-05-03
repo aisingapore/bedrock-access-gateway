@@ -1,12 +1,16 @@
 import argparse
 import boto3
 import logging
+import json
 import os
 import sys
 from botocore.exceptions import ClientError
 from dotenv import load_dotenv
 from openai import OpenAI
 from typing import Any, Dict, List
+
+# Set the log level
+logging.basicConfig(level=logging.INFO)
 
 # Load the environment variables
 load_dotenv()
@@ -19,6 +23,10 @@ try:
     openai_base_url = os.environ["API_URL"]
     temperature = float(os.environ.get("TEMPERATURE", 0.0))
     top_k = int(os.environ.get("TOP_K", 250))
+
+    # Log the settings
+    logging.info(f"AWS Region: {aws_region}")
+    logging.info(f"Endpoint ARN: {endpoint_arn}")
 except KeyError as e:
     logging.error(f"The environment variable {e} is not defined.")
     sys.exit(1)
@@ -43,29 +51,67 @@ def stream_openai_response(openai_client, conversation: List[Dict[str, Any]]):
             max_tokens=max_tokens,
             temperature=temperature,
         )
-    except (ClientError, Exception) as e:
+
+        # Process the stream
+        assistant_message = ""
+        for part in stream:
+            # Get the content from the stream
+            content = part.choices[0].delta.content or ""
+
+            # Filter out new lines and line feeds
+            filtered_content = content.replace("\n", "").replace("\r", "")
+
+            # Append to the assistant's message
+            assistant_message += filtered_content
+
+            # Print the filtered content
+            print(filtered_content, end="", flush=True)
+
+        print()
+
+        # Append the assistant's reply to the conversation
+        conversation.append({"role": "assistant", "content": assistant_message})
+
+    except Exception as e:
         logging.error(f"Exception: {e}")
         sys.exit(1)
 
-    # Process the stream
-    assistant_message = ""
-    for part in stream:
-        # Get the content from the stream
-        content = part.choices[0].delta.content or ""
 
-        # Filter out new lines and line feeds
-        filtered_content = content.replace("\n", "").replace("\r", "")
+def stream_bedrock_response_with_invoke_model(
+    bedrock_client, conversation: List[Dict[str, Any]]
+):
+    """
+    Stream the response from Bedrock with invoke_model_with_response_stream.
+    Used for the models that do not support converse_stream.
 
-        # Append to the assistant's message
-        assistant_message += filtered_content
-
-        # Print the filtered content
-        print(filtered_content, end="", flush=True)
-
-    print()
-
-    # Append the assistant's reply to the conversation
-    conversation.append({"role": "assistant", "content": assistant_message})
+    Args:
+        bedrock_client: The Bedrock client.
+        conversation (List[Dict[str, Any]]): The conversation history.
+    """
+    request = json.dumps(
+        {
+            "prompt": conversation[-1]["content"],
+            "max_gen_len": max_tokens,
+            "temperature": temperature,
+        }
+    )
+    try:
+        streaming_response = bedrock_client.invoke_model_with_response_stream(
+            modelId=endpoint_arn, body=request
+        )
+        for event in streaming_response["body"]:
+            chunk = json.loads(event["chunk"]["bytes"])
+            if "generation" in chunk:
+                print(chunk["generation"], end="")
+        print()
+    except bedrock_client.exceptions.ModelNotReadyException:
+        logging.error(
+            "The model is not ready for inference. Please wait and try again later."
+        )
+        sys.exit(1)
+    except Exception as e:
+        logging.error(f"Exception: {e}")
+        sys.exit(1)
 
 
 def stream_bedrock_response(bedrock_client, conversation: List[Dict[str, Any]]):
@@ -97,7 +143,18 @@ def stream_bedrock_response(bedrock_client, conversation: List[Dict[str, Any]]):
                 }
             },
         )
-    except (ClientError, Exception) as e:
+    except ClientError as e:
+        # If the imported model does not support converse_stream, an exception will be raised
+        if "ConverseStream operation" in str(e):
+            stream_bedrock_response_with_invoke_model(bedrock_client, conversation)
+            return
+        raise
+    except bedrock_client.exceptions.ModelNotReadyException:
+        logging.error(
+            "The model is not ready for inference. Please wait and try again later."
+        )
+        sys.exit(1)
+    except Exception as e:
         logging.error(f"Exception: {e}")
         sys.exit(1)
 
@@ -122,12 +179,17 @@ def main():
     )
     args = parser.parse_args()
     if args.api:
-        print("Using the OpenAI-compatible API.")
+        logging.info("Using the OpenAI-compatible API.")
         openai_client = OpenAI(base_url=openai_base_url, api_key="bedrock")
     else:
-        print("Using the Amazon Bedrock Runtime (https://docs.aws.amazon.com/bedrock/latest/APIReference/API_Operations_Amazon_Bedrock_Runtime.html).")
+        logging.info(
+            "Using the Amazon Bedrock Runtime (https://docs.aws.amazon.com/bedrock/latest/APIReference/API_Operations_Amazon_Bedrock_Runtime.html)."
+        )
         bedrock_client = boto3.client("bedrock-runtime", region_name=aws_region)
 
+    print(
+        "This demo application is built for the imported SEA-LION models (https://sea-lion.ai/our-models/) with Llama architecture."
+    )
     print("Welcome! Type your message or /bye to end.")
 
     # Initialize the conversation history
